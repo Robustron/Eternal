@@ -70,8 +70,9 @@ function NotebookHome() {
       {!intro && !side && <SideChooser onChoose={chooseSide} />}
 
       {/* Notebook */}
-      <div className="relative mx-auto flex min-h-screen max-w-[1400px] items-center justify-center p-3 md:p-8">
-        <div className="breathe relative w-full" style={{ aspectRatio: "16 / 10", maxHeight: "92vh" }}>
+      <div className="relative w-full h-screen">
+        <div className="relative w-full h-full">
+
           {/* Desktop: two pages side-by-side */}
           <div className="absolute inset-0 hidden md:grid grid-cols-2">
             <NotebookPage
