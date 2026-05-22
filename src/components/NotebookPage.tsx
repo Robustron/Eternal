@@ -144,7 +144,7 @@ export function NotebookPage({ side, entries, isOwner, dayKey, isToday, onChange
 
         {/* live writing area */}
         <div className="mt-6">
-          {isOwner ? (
+          {canWrite ? (
             <>
               <textarea
                 ref={taRef}
