@@ -32,26 +32,27 @@ function formatStamp(iso: string) {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-export function NotebookPage({ side, entries, isOwner, onChange }: Props) {
+export function NotebookPage({ side, entries, isOwner, dayKey, isToday, onChange }: Props) {
   const isPink = side === "pink";
-  const pageEntries = entries.filter((e) => e.page === side).sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-  );
-  const draft = pageEntries.find((e) => !e.locked);
-  const lockedEntries = pageEntries.filter((e) => e.locked);
+  const dayEntries = entries
+    .filter((e) => e.page === side && e.day_key === dayKey)
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  const draft = dayEntries.find((e) => !e.locked);
+  const lockedEntries = dayEntries.filter((e) => e.locked);
+  const canWrite = isOwner && isToday;
 
   const [text, setText] = useState(draft?.content ?? "");
   const draftIdRef = useRef<string | null>(draft?.id ?? null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
-  // Sync local text when realtime draft changes (from the other device of same person).
+  // Reset local state when switching days.
   useEffect(() => {
     draftIdRef.current = draft?.id ?? null;
     if (document.activeElement !== taRef.current) {
       setText(draft?.content ?? "");
     }
-  }, [draft?.id, draft?.content]);
+  }, [draft?.id, draft?.content, dayKey]);
 
   const autosize = () => {
     const ta = taRef.current;
@@ -67,7 +68,7 @@ export function NotebookPage({ side, entries, isOwner, onChange }: Props) {
     } else if (value.trim().length > 0) {
       const { data } = await supabase
         .from("entries")
-        .insert({ page: side, content: value, locked: false })
+        .insert({ page: side, content: value, locked: false, day_key: dayKey })
         .select("id")
         .single();
       if (data) draftIdRef.current = data.id;
@@ -88,12 +89,13 @@ export function NotebookPage({ side, entries, isOwner, onChange }: Props) {
     if (draftIdRef.current) {
       await supabase.from("entries").update({ content: text, locked: true }).eq("id", draftIdRef.current);
     } else {
-      await supabase.from("entries").insert({ page: side, content: text, locked: true });
+      await supabase.from("entries").insert({ page: side, content: text, locked: true, day_key: dayKey });
     }
     draftIdRef.current = null;
     setText("");
     onChange();
   };
+
 
   const inkColor = isPink ? "var(--ink-pink)" : "var(--ink-blue)";
   const paperBg = isPink
