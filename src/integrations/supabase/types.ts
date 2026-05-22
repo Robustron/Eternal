@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          day_key: string
           id: string
           locked: boolean
           locked_at: string | null
@@ -27,6 +28,7 @@ export type Database = {
         Insert: {
           content?: string
           created_at?: string
+          day_key?: string
           id?: string
           locked?: boolean
           locked_at?: string | null
@@ -36,6 +38,7 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string
+          day_key?: string
           id?: string
           locked?: boolean
           locked_at?: string | null
