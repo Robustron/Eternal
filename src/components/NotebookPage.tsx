@@ -9,12 +9,15 @@ export type Entry = {
   locked: boolean;
   locked_at: string | null;
   created_at: string;
+  day_key: string;
 };
 
 type Props = {
   side: "pink" | "blue";
   entries: Entry[];
   isOwner: boolean;
+  dayKey: string;
+  isToday: boolean;
   onChange: () => void;
 };
 
@@ -22,6 +25,7 @@ const labels = {
   pink: { title: "her page", placeholder: "write something only she would write…" },
   blue: { title: "his page", placeholder: "write something only he would write…" },
 };
+
 
 function formatStamp(iso: string) {
   const d = new Date(iso);
