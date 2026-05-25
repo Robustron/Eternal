@@ -55,7 +55,7 @@ export function PasswordGate({ children }: { children: React.ReactNode }) {
           }}
         />
         <p className="mt-6 text-xs italic opacity-40" style={{ fontFamily: "var(--font-serif)" }}>
-          only the two of you know.
+          only the two of us know.
         </p>
         <style>{`@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }`}</style>
       </form>
