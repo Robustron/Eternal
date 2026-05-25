@@ -1,11 +1,9 @@
 @import "tailwindcss" source(none);
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Parisienne&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Sacramento&display=swap');
 @source "../src";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
-
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Parisienne&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Sacramento&display=swap');
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
