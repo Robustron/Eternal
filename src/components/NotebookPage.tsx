@@ -66,13 +66,15 @@ export function NotebookPage({ side, entries, isOwner, dayKey, isToday, onChange
 
   const persist = async (value: string) => {
     if (draftIdRef.current) {
-      await supabase.from("entries").update({ content: value }).eq("id", draftIdRef.current);
+      const { error } = await supabase.from("entries").update({ content: value }).eq("id", draftIdRef.current);
+      if (error) console.error("Auto-save failed:", error);
     } else if (value.trim().length > 0) {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("entries")
         .insert({ page: side, content: value, locked: false, day_key: dayKey })
         .select("id")
         .single();
+      if (error) console.error("Auto-save failed:", error);
       if (data) draftIdRef.current = data.id;
     }
     onChange();
@@ -88,11 +90,22 @@ export function NotebookPage({ side, entries, isOwner, dayKey, isToday, onChange
     if (!text.trim()) return;
     if (!confirm("Seal these words forever? They can never be edited or deleted.")) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
+    
+    let error = null;
     if (draftIdRef.current) {
-      await supabase.from("entries").update({ content: text, locked: true }).eq("id", draftIdRef.current);
+      const res = await supabase.from("entries").update({ content: text, locked: true, locked_at: new Date().toISOString() }).eq("id", draftIdRef.current);
+      error = res.error;
     } else {
-      await supabase.from("entries").insert({ page: side, content: text, locked: true, day_key: dayKey });
+      const res = await supabase.from("entries").insert({ page: side, content: text, locked: true, locked_at: new Date().toISOString(), day_key: dayKey });
+      error = res.error;
     }
+    
+    if (error) {
+      console.error("Failed to seal:", error);
+      alert("Failed to save to database: " + error.message + "\n\nPlease check your Supabase table permissions (Row Level Security).");
+      return; // Do NOT clear the text if it failed to save!
+    }
+    
     draftIdRef.current = null;
     setText("");
     onChange();
