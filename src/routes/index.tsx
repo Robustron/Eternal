@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { NotebookPage, type Entry } from "@/components/NotebookPage";
 import { SideChooser } from "@/components/SideChooser";
 import { addDays, formatDayLabel, msUntilNext2AM, todayKey } from "@/lib/day";
+import { PasswordGate } from "@/components/PasswordGate";
+
 
 export const Route = createFileRoute("/")({
   component: NotebookHome,
@@ -104,7 +106,9 @@ function NotebookHome() {
   };
 
   return (
+    <PasswordGate>
     <main className="min-h-screen w-full">
+
       {/* Tiny intro */}
       {intro && (
         <div
@@ -202,5 +206,7 @@ function NotebookHome() {
         </div>
       </div>
     </main>
+    </PasswordGate>
   );
+
 }

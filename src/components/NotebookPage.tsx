@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatDayLabel } from "@/lib/day";
+
 
 export type Entry = {
   id: string;
@@ -115,10 +117,11 @@ export function NotebookPage({ side, entries, isOwner, dayKey, isToday, onChange
           <h2 style={{ fontFamily: "var(--font-fancy)" }} className="text-3xl md:text-4xl opacity-80">
             {labels[side].title}
           </h2>
-          <span className="text-xs italic opacity-50" style={{ fontFamily: "var(--font-serif)" }}>
-            {isPink ? "left page" : "right page"}
+          <span className="text-xs italic opacity-60" style={{ fontFamily: "var(--font-serif)" }}>
+            {formatDayLabel(dayKey)}
           </span>
         </div>
+
 
         {/* locked entries — permanent memories */}
         <div className="space-y-7">
