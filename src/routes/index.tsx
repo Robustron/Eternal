@@ -19,8 +19,9 @@ function NotebookHome() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [intro, setIntro] = useState(true);
   const [mobilePage, setMobilePage] = useState<"pink" | "blue">("pink");
+  const START_DATE = "2026-05-25";
   const [today, setToday] = useState(todayKey());
-  const [viewDay, setViewDay] = useState(todayKey());
+  const [viewDay, setViewDay] = useState(todayKey() < START_DATE ? START_DATE : todayKey());
 
   // Restore chosen side
   useEffect(() => {
@@ -76,14 +77,17 @@ function NotebookHome() {
 
   const isToday = viewDay === today;
 
-  // Earliest day that has any entry — bound for going further back
+  // Earliest day is START_DATE, or earlier if entries exist
   const earliestDay = useMemo(() => {
-    if (entries.length === 0) return today;
-    return entries.reduce((min, e) => (e.day_key < min ? e.day_key : min), today);
-  }, [entries, today]);
+    let minDay = START_DATE;
+    for (const e of entries) {
+      if (e.day_key < minDay) minDay = e.day_key;
+    }
+    return minDay;
+  }, [entries]);
 
   const canGoBack = viewDay > earliestDay;
-  const canGoForward = viewDay < today;
+  const canGoForward = true; // Always allow going forward to future pages
 
   const goBack = () => canGoBack && setViewDay((d) => addDays(d, -1));
   const goForward = () => canGoForward && setViewDay((d) => addDays(d, 1));

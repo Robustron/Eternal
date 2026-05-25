@@ -24,10 +24,6 @@ export function addDays(key: string, delta: number): string {
 export function formatDayLabel(key: string): string {
   const [y, m, d] = key.split("-").map(Number);
   const dt = new Date(y, m - 1, d);
-  const today = todayKey();
-  if (key === today) return "today";
-  const yest = addDays(today, -1);
-  if (key === yest) return "yesterday";
   return dt.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
 }
 

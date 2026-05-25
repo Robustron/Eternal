@@ -11,14 +11,14 @@ export function PasswordGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (localStorage.getItem(KEY) === "1") setUnlocked(true);
+    if (sessionStorage.getItem(KEY) === "1") setUnlocked(true);
     setReady(true);
   }, []);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (value.trim().toLowerCase() === PASSWORD) {
-      localStorage.setItem(KEY, "1");
+      sessionStorage.setItem(KEY, "1");
       setUnlocked(true);
     } else {
       setShake(true);

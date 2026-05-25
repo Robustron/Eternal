@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDayLabel } from "@/lib/day";
+import { formatDayLabel, todayKey } from "@/lib/day";
 
 
 export type Entry = {
@@ -181,6 +181,10 @@ export function NotebookPage({ side, entries, isOwner, dayKey, isToday, onChange
                 style={{ background: inkColor, animation: "caret-glow 1.4s ease-in-out infinite" }}
               />
             </div>
+          ) : dayKey > todayKey() ? (
+            <p className="italic opacity-40" style={{ fontFamily: "var(--font-serif)" }}>
+              this page opens on {formatDayLabel(dayKey)}…
+            </p>
           ) : (
             <p className="italic opacity-40" style={{ fontFamily: "var(--font-serif)" }}>
               waiting for {isPink ? "her" : "him"} to write…
