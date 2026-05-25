@@ -206,5 +206,7 @@ function NotebookHome() {
         </div>
       </div>
     </main>
+    </PasswordGate>
   );
+
 }
