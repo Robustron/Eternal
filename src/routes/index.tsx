@@ -106,7 +106,9 @@ function NotebookHome() {
   };
 
   return (
+    <PasswordGate>
     <main className="min-h-screen w-full">
+
       {/* Tiny intro */}
       {intro && (
         <div
