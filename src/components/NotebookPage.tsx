@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatDayLabel } from "@/lib/day";
+
 
 export type Entry = {
   id: string;
