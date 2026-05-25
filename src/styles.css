@@ -143,10 +143,10 @@ textarea.notebook-writer, .notebook-writer {
   outline: none;
   resize: none;
   width: 100%;
-  font-family: var(--font-script);
-  font-size: 1.8rem;
-  line-height: 38px;
-  letter-spacing: 0.01em;
+  font-family: var(--font-fancy);
+  font-size: 2.2rem;
+  line-height: 42px;
+  letter-spacing: 0.02em;
   caret-color: currentColor;
 }
 textarea.notebook-writer::placeholder {
@@ -158,9 +158,9 @@ textarea.notebook-writer::placeholder {
 }
 
 .locked-text {
-  font-family: var(--font-script);
-  font-size: 1.7rem;
-  line-height: 38px;
+  font-family: var(--font-fancy);
+  font-size: 2.2rem;
+  line-height: 42px;
   white-space: pre-wrap;
   word-break: break-word;
 }
