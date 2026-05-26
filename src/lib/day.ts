@@ -16,7 +16,7 @@ export function todayKey(): string {
 
 export function addDays(key: string, delta: number): string {
   const [y, m, d] = key.split("-").map(Number);
-  const dt = new Date(y, m - 1, d);
+  const dt = new Date(y, m - 1, d, 12, 0, 0); // Set to noon to avoid < 2AM shift
   dt.setDate(dt.getDate() + delta);
   return dayKeyFor(dt);
 }
