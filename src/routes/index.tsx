@@ -23,6 +23,12 @@ function NotebookHome() {
   const [today, setToday] = useState(todayKey());
   const [viewDay, setViewDay] = useState(todayKey() < START_DATE ? START_DATE : todayKey());
 
+  const daysSinceStart = Math.floor(
+    (new Date(today).getTime() - new Date(START_DATE).getTime()) / (1000 * 60 * 60 * 24)
+  );
+  // Unlocks every 30 days. Example: Day 30, Day 60, Day 90...
+  const isRevealed = daysSinceStart > 0 && daysSinceStart % 30 === 0;
+
   // Restore chosen side
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -60,6 +66,8 @@ function NotebookHome() {
     const { data } = await supabase
       .from("entries")
       .select("*")
+      // Filter out system claims
+      .not("day_key", "eq", "system")
       .order("created_at", { ascending: true });
     if (data) setEntries(data as Entry[]);
   }, []);
@@ -163,6 +171,7 @@ function NotebookHome() {
               side="pink"
               entries={entries}
               isOwner={side === "pink"}
+              isRevealed={isRevealed}
               dayKey={viewDay}
               isToday={isToday}
               onChange={load}
@@ -171,6 +180,7 @@ function NotebookHome() {
               side="blue"
               entries={entries}
               isOwner={side === "blue"}
+              isRevealed={isRevealed}
               dayKey={viewDay}
               isToday={isToday}
               onChange={load}
@@ -186,6 +196,7 @@ function NotebookHome() {
                   side={mobilePage}
                   entries={entries}
                   isOwner={side === mobilePage}
+                  isRevealed={isRevealed}
                   dayKey={viewDay}
                   isToday={isToday}
                   onChange={load}

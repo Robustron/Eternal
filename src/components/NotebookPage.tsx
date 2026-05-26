@@ -3,6 +3,7 @@ import { Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDayLabel, todayKey } from "@/lib/day";
 
+const START_DATE = "2026-05-25";
 
 export type Entry = {
   id: string;
@@ -18,6 +19,7 @@ type Props = {
   side: "pink" | "blue";
   entries: Entry[];
   isOwner: boolean;
+  isRevealed: boolean;
   dayKey: string;
   isToday: boolean;
   onChange: () => void;
@@ -34,7 +36,16 @@ function formatStamp(iso: string) {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-export function NotebookPage({ side, entries, isOwner, dayKey, isToday, onChange }: Props) {
+/** How many days until the next reveal from today? */
+function daysUntilNextReveal(): number {
+  const start = new Date(START_DATE).getTime();
+  const now = new Date().getTime();
+  const daysSince = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+  const remainder = daysSince % 30;
+  return remainder === 0 ? 0 : 30 - remainder;
+}
+
+export function NotebookPage({ side, entries, isOwner, isRevealed, dayKey, isToday, onChange }: Props) {
   const isPink = side === "pink";
   const dayEntries = entries
     .filter((e) => e.page === side && e.day_key === dayKey)
@@ -42,6 +53,9 @@ export function NotebookPage({ side, entries, isOwner, dayKey, isToday, onChange
   const draft = dayEntries.find((e) => !e.locked);
   const lockedEntries = dayEntries.filter((e) => e.locked);
   const canWrite = isOwner && isToday;
+
+  // Partner sees this page — lock it unless today is a reveal day
+  const isLocked = !isOwner && !isRevealed;
 
   const [text, setText] = useState(draft?.content ?? "");
   const draftIdRef = useRef<string | null>(draft?.id ?? null);
@@ -90,37 +104,54 @@ export function NotebookPage({ side, entries, isOwner, dayKey, isToday, onChange
     if (!text.trim()) return;
     if (!confirm("Seal these words forever? They can never be edited or deleted.")) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    
+
     let error = null;
     if (draftIdRef.current) {
-      const res = await supabase.from("entries").update({ content: text, locked: true, locked_at: new Date().toISOString() }).eq("id", draftIdRef.current);
+      const res = await supabase
+        .from("entries")
+        .update({ content: text, locked: true, locked_at: new Date().toISOString() })
+        .eq("id", draftIdRef.current);
       error = res.error;
     } else {
-      const res = await supabase.from("entries").insert({ page: side, content: text, locked: true, locked_at: new Date().toISOString(), day_key: dayKey });
+      const res = await supabase.from("entries").insert({
+        page: side,
+        content: text,
+        locked: true,
+        locked_at: new Date().toISOString(),
+        day_key: dayKey,
+      });
       error = res.error;
     }
-    
+
     if (error) {
       console.error("Failed to seal:", error);
-      alert("Failed to save to database: " + error.message + "\n\nPlease check your Supabase table permissions (Row Level Security).");
-      return; // Do NOT clear the text if it failed to save!
+      alert(
+        "Failed to save to database: " +
+          error.message +
+          "\n\nPlease check your Supabase table permissions (Row Level Security)."
+      );
+      return;
     }
-    
+
     draftIdRef.current = null;
     setText("");
     onChange();
   };
 
-
   const inkColor = isPink ? "var(--ink-pink)" : "var(--ink-blue)";
+  const partnerColor = isPink ? "var(--ink-blue)" : "var(--ink-pink)";
   const paperBg = isPink
     ? "linear-gradient(135deg, var(--paper-pink) 0%, var(--paper-pink-deep) 100%)"
     : "linear-gradient(135deg, var(--paper-blue) 0%, var(--paper-blue-deep) 100%)";
 
+  const daysLeft = daysUntilNextReveal();
+
   return (
     <div
       className={`paper-texture paper-lines relative h-full w-full overflow-hidden ${
-        isPink ? "page-shadow-left rounded-l-[14px] md:rounded-r-none rounded-r-[14px]" : "page-shadow-right rounded-r-[14px] md:rounded-l-none rounded-l-[14px]"
+        isPink
+          ? "page-shadow-left rounded-l-[14px] md:rounded-r-none rounded-r-[14px]"
+          : "page-shadow-right rounded-r-[14px] md:rounded-l-none rounded-l-[14px]"
       }`}
       style={{ background: paperBg, color: inkColor }}
     >
@@ -135,75 +166,94 @@ export function NotebookPage({ side, entries, isOwner, dayKey, isToday, onChange
           </span>
         </div>
 
-
-        {/* locked entries — permanent memories */}
-        <div className="space-y-7">
-          {lockedEntries.map((e) => (
-            <div key={e.id} className="ink-in">
-              <div className="locked-text" style={{ color: inkColor, opacity: 0.92 }}>
-                {e.content}
-              </div>
-              <div
-                className="mt-2 flex items-center gap-2 text-[11px] italic opacity-55"
-                style={{ fontFamily: "var(--font-serif)" }}
+        {/* LOCKED — partner cannot read this page until reveal day */}
+        {isLocked ? (
+          <div className="flex flex-col items-center justify-center h-48 gap-4 text-center">
+            <Lock className="h-8 w-8 opacity-20" style={{ color: partnerColor }} />
+            <p
+              className="italic opacity-40 text-sm leading-relaxed"
+              style={{ fontFamily: "var(--font-serif)", color: partnerColor }}
+            >
+              these pages are sealed.
+            </p>
+            {daysLeft > 0 && (
+              <p
+                className="italic opacity-30 text-xs"
+                style={{ fontFamily: "var(--font-serif)", color: partnerColor }}
               >
-                <Lock className="h-3 w-3" />
-                sealed · {e.locked_at ? formatStamp(e.locked_at) : formatStamp(e.created_at)}
-              </div>
-              <div
-                className="mt-6 h-px"
-                style={{ background: "currentColor", opacity: 0.12 }}
-              />
+                the notebook opens in {daysLeft} {daysLeft === 1 ? "day" : "days"}.
+              </p>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* locked entries — permanent memories */}
+            <div className="space-y-7">
+              {lockedEntries.map((e) => (
+                <div key={e.id} className="ink-in">
+                  <div className="locked-text" style={{ color: inkColor, opacity: 0.92 }}>
+                    {e.content}
+                  </div>
+                  <div
+                    className="mt-2 flex items-center gap-2 text-[11px] italic opacity-55"
+                    style={{ fontFamily: "var(--font-serif)" }}
+                  >
+                    <Lock className="h-3 w-3" />
+                    sealed · {e.locked_at ? formatStamp(e.locked_at) : formatStamp(e.created_at)}
+                  </div>
+                  <div className="mt-6 h-px" style={{ background: "currentColor", opacity: 0.12 }} />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* live writing area */}
-        <div className="mt-6">
-          {canWrite ? (
-            <>
-              <textarea
-                ref={taRef}
-                className="notebook-writer"
-                style={{ color: inkColor }}
-                value={text}
-                onChange={(e) => handleChange(e.target.value)}
-                placeholder={labels[side].placeholder}
-                spellCheck={false}
-              />
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-[11px] italic opacity-50" style={{ fontFamily: "var(--font-serif)" }}>
-                  {text.trim() ? "saving softly…" : "auto-saves as you write"}
-                </span>
-                <button
-                  onClick={lockForever}
-                  disabled={!text.trim()}
-                  className="group inline-flex items-center gap-2 rounded-full border border-current/30 px-4 py-1.5 text-[12px] italic transition-opacity disabled:opacity-30 hover:opacity-100"
-                  style={{ fontFamily: "var(--font-serif)", color: inkColor, opacity: 0.7 }}
-                >
-                  <Lock className="h-3 w-3" />
-                  seal forever
-                </button>
-              </div>
-            </>
-          ) : draft ? (
-            <div className="locked-text opacity-80" style={{ color: inkColor }}>
-              {draft.content}
-              <span
-                className="ml-1 inline-block h-5 w-[2px] align-middle"
-                style={{ background: inkColor, animation: "caret-glow 1.4s ease-in-out infinite" }}
-              />
+            {/* live writing area */}
+            <div className="mt-6">
+              {canWrite ? (
+                <>
+                  <textarea
+                    ref={taRef}
+                    className="notebook-writer"
+                    style={{ color: inkColor }}
+                    value={text}
+                    onChange={(e) => handleChange(e.target.value)}
+                    placeholder={labels[side].placeholder}
+                    spellCheck={false}
+                  />
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="text-[11px] italic opacity-50" style={{ fontFamily: "var(--font-serif)" }}>
+                      {text.trim() ? "saving softly…" : "auto-saves as you write"}
+                    </span>
+                    <button
+                      onClick={lockForever}
+                      disabled={!text.trim()}
+                      className="group inline-flex items-center gap-2 rounded-full border border-current/30 px-4 py-1.5 text-[12px] italic transition-opacity disabled:opacity-30 hover:opacity-100"
+                      style={{ fontFamily: "var(--font-serif)", color: inkColor, opacity: 0.7 }}
+                    >
+                      <Lock className="h-3 w-3" />
+                      seal forever
+                    </button>
+                  </div>
+                </>
+              ) : draft ? (
+                <div className="locked-text opacity-80" style={{ color: inkColor }}>
+                  {draft.content}
+                  <span
+                    className="ml-1 inline-block h-5 w-[2px] align-middle"
+                    style={{ background: inkColor, animation: "caret-glow 1.4s ease-in-out infinite" }}
+                  />
+                </div>
+              ) : dayKey > todayKey() ? (
+                <p className="italic opacity-40" style={{ fontFamily: "var(--font-serif)" }}>
+                  this page opens on {formatDayLabel(dayKey)}…
+                </p>
+              ) : (
+                <p className="italic opacity-40" style={{ fontFamily: "var(--font-serif)" }}>
+                  waiting for {isPink ? "her" : "him"} to write…
+                </p>
+              )}
             </div>
-          ) : dayKey > todayKey() ? (
-            <p className="italic opacity-40" style={{ fontFamily: "var(--font-serif)" }}>
-              this page opens on {formatDayLabel(dayKey)}…
-            </p>
-          ) : (
-            <p className="italic opacity-40" style={{ fontFamily: "var(--font-serif)" }}>
-              waiting for {isPink ? "her" : "him"} to write…
-            </p>
-          )}
-        </div>
+          </>
+        )}
       </div>
     </div>
   );
