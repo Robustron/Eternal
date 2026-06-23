@@ -1,9 +1,7 @@
-// A "notebook day" rolls over at 2:00 AM local time.
+// A "notebook day" rolls over at 12:00 AM (midnight) local time.
 // Returns a YYYY-MM-DD string.
 export function dayKeyFor(date: Date): string {
   const d = new Date(date);
-  // Before 2 AM, we still belong to the previous day.
-  if (d.getHours() < 2) d.setDate(d.getDate() - 1);
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
@@ -16,7 +14,7 @@ export function todayKey(): string {
 
 export function addDays(key: string, delta: number): string {
   const [y, m, d] = key.split("-").map(Number);
-  const dt = new Date(y, m - 1, d, 12, 0, 0); // Set to noon to avoid < 2AM shift
+  const dt = new Date(y, m - 1, d, 12, 0, 0); // Set to noon to avoid any edge cases
   dt.setDate(dt.getDate() + delta);
   return dayKeyFor(dt);
 }
@@ -27,11 +25,10 @@ export function formatDayLabel(key: string): string {
   return dt.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
 }
 
-// Milliseconds until the next 2 AM local time.
+// Milliseconds until the next midnight local time.
 export function msUntilNext2AM(): number {
   const now = new Date();
   const next = new Date(now);
-  next.setHours(2, 0, 0, 0);
-  if (next <= now) next.setDate(next.getDate() + 1);
+  next.setHours(24, 0, 0, 0); // next midnight
   return next.getTime() - now.getTime();
 }
