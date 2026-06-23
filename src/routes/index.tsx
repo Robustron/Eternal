@@ -23,8 +23,10 @@ function NotebookHome() {
   const [today, setToday] = useState(todayKey());
   const [viewDay, setViewDay] = useState(todayKey() < START_DATE ? START_DATE : todayKey());
 
+  // Cycle starts 1 day after notebook start so first reveal is June 25
+  const CYCLE_START_DATE = "2026-05-26";
   const daysSinceStart = Math.floor(
-    (new Date(today).getTime() - new Date(START_DATE).getTime()) / (1000 * 60 * 60 * 24)
+    (new Date(today).getTime() - new Date(CYCLE_START_DATE).getTime()) / (1000 * 60 * 60 * 24)
   );
   // Unlocks every 30 days. Example: Day 30, Day 60, Day 90...
   const isRevealed = daysSinceStart > 0 && daysSinceStart % 30 === 0;

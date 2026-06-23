@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDayLabel, todayKey } from "@/lib/day";
 
 const START_DATE = "2026-05-25";
+const CYCLE_START_DATE = "2026-05-26";
 
 export type Entry = {
   id: string;
@@ -38,7 +39,7 @@ function formatStamp(iso: string) {
 
 /** How many days until the next reveal from today? */
 function daysUntilNextReveal(): number {
-  const start = new Date(START_DATE).getTime();
+  const start = new Date(CYCLE_START_DATE).getTime();
   const now = new Date().getTime();
   const daysSince = Math.floor((now - start) / (1000 * 60 * 60 * 24));
   const remainder = daysSince % 30;
