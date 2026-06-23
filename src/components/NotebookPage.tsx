@@ -39,9 +39,10 @@ function formatStamp(iso: string) {
 
 /** How many days until the next reveal from today? */
 function daysUntilNextReveal(): number {
-  const start = new Date(CYCLE_START_DATE).getTime();
-  const now = new Date().getTime();
-  const daysSince = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+  // Use local date strings at noon to stay consistent with todayKey() / isRevealed logic
+  const todayDate = new Date(todayKey() + "T12:00:00");
+  const startDate = new Date(CYCLE_START_DATE + "T12:00:00");
+  const daysSince = Math.floor((todayDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
   const remainder = daysSince % 30;
   return remainder === 0 ? 0 : 30 - remainder;
 }
